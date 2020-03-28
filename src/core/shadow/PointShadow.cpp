@@ -36,9 +36,10 @@ void PointShadow::GenerateShadowMap(const glm::vec3 &position,
     glClear(GL_DEPTH_BUFFER_BIT);
     /* Configure shader and Matrices */
     float aspect = static_cast<float>(width) / height;
-    float near = 1.0f, far = 100.f;
+	float near_t = 1.0f;
+	float far_t = 100.f;
     glm::mat4 shadowProj = glm::perspective(glm::radians(90.f),
-                                            aspect, near, far);
+                                            aspect, near_t, far_t);
     static const glm::vec3 z {0, 0, 1},
             y {0, 1, 0},
             x { 1, 0, 0 };
@@ -60,7 +61,7 @@ void PointShadow::GenerateShadowMap(const glm::vec3 &position,
     }
     shadowGenShader.UseShaderProgram();
     shadowGenShader.Set("lightPos", position);
-    shadowGenShader.Set("far_plane", far);
+    shadowGenShader.Set("far_plane", far_t);
     /* Rendering scene to shadow map */
     glCullFace(GL_FRONT); // fix peter panning
     auto& scene = Engine::GetInstance().GetCurrentScene();
