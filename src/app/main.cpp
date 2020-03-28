@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <GUI.hpp>
 
 #include "Scene.hpp"
 #include "Renderer.hpp"
@@ -52,8 +53,6 @@ int main(int argc, char *argv[]) {
     Engine& engine = Engine::GetInstance();
 	Renderer& renderer = engine.GetRenderer();
 
-	// GUI ui = GUI(renderer);
-	
     engine.EnableUniformBuffer<LightInformation>();
     engine.EnableUniformBuffer<GlobalTransform>();
 
@@ -61,13 +60,14 @@ int main(int argc, char *argv[]) {
     engine.MakeCurrentScene(scene);
 	
     // --1--
-    GameObject& sphere = scene.CreateGameObject(); {
-        sphere.CreateComponent<Mesh>(SimpleMesh::Sphere());
-        auto& material = sphere.CreateComponent<Material>();
-        material.SetShader(engine.GetDefaultShader());
-        material.SetAlbedo(1, 1, 1);
-        material.SetMetallic(0.1);
-        material.SetRoughness(0.8);
+    GameObject& sphere = scene.CreateGameObject();
+    sphere.CreateComponent<Mesh>(SimpleMesh::Sphere());
+    auto& sphere_material = sphere.CreateComponent<Material>();
+    sphere_material.SetShader(engine.GetDefaultShader());
+    sphere_material.SetAlbedo(1, 1, 1);
+    sphere_material.SetMetallic(0.1);
+    sphere_material.SetRoughness(0.8);
+    {
         auto& transform = sphere.CreateComponent<Transform>();
         transform.SetPosition(0, 0, -10);
     }
@@ -115,14 +115,17 @@ int main(int argc, char *argv[]) {
 
     scene.CreateSkybox();
     scene.Build();
+
+    GUI ui = GUI(renderer);
+
     while (!renderer.ShouldEnd()) {
         renderer.UpdateBeforeRendering();
 
         processInput(scene.GetCurrentCamera());
 
-        scene.Update();
-
-		// ui.DrawUI();
+		sphere_material.SetAlbedo(ui.ui.albedo);
+		sphere_material.SetMetallic(ui.ui.metallic);
+		sphere_material.SetRoughness(ui.ui.roughness);
 
         //bob render-------------------------------------------------------------
         bobShader.UseShaderProgram();
@@ -149,6 +152,10 @@ int main(int argc, char *argv[]) {
         bobShader.Set("diffuseTexture", 0);
         bob.Render();
         //bob render end----------------------------------------------------
+
+
+        scene.Update();
+        ui.DrawUI();
 
 
         renderer.UpdateAfterRendering();

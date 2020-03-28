@@ -19,6 +19,11 @@
 
 class SkinnedMesh : public  Component{
 public:
+    void BeforeRenderPass() {
+
+    }
+
+public:
     SkinnedMesh();
 
     ~SkinnedMesh();
