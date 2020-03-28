@@ -59,7 +59,7 @@ public:
     /* Setting Shader component due to scene configuration */
     void Build();
 
-    void Update(GUI& ui);
+    void Update();
 
     inline Camera& GetCurrentCamera() { return camera; }
 

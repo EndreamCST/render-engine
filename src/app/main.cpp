@@ -49,11 +49,10 @@ void processInput(Camera &camera) {
 
 
 int main(int argc, char *argv[]) {
-    static_assert(std::is_base_of_v<Component, DirectionalLight>, "fuck");
     Engine& engine = Engine::GetInstance();
 	Renderer& renderer = engine.GetRenderer();
 
-	GUI& ui = GUI::GUI(renderer);
+	// GUI ui = GUI(renderer);
 	
     engine.EnableUniformBuffer<LightInformation>();
     engine.EnableUniformBuffer<GlobalTransform>();
@@ -121,13 +120,13 @@ int main(int argc, char *argv[]) {
 
         processInput(scene.GetCurrentCamera());
 
-        scene.Update(ui);
+        scene.Update();
 
-		ui.DrawUI();
+		// ui.DrawUI();
 
         //bob render-------------------------------------------------------------
         bobShader.UseShaderProgram();
-        glm::mat4 projection = glm::perspective(scene.GetCurrentCamera().GetFovy(), float(1280) / float(720), 0.1f, 1000.0f);
+        glm::mat4 projection = scene.GetCurrentCamera().GetProjectionMatrix();
         glm::mat4 view = scene.GetCurrentCamera().GetViewMatrix();
         glm::mat4 model(1.0f);
         model = translate(model, glm::vec3(5.0, -2.0, -8));
@@ -135,16 +134,17 @@ int main(int argc, char *argv[]) {
         model = rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         model = scale(model, glm::vec3(0.05f));
         glm::mat4 MVP = projection * view * model;
-        bobShader.Set("MVP", MVP);
-        bobShader.Set("M", model);
+        bobShader.Set("view", view);
+        bobShader.Set("projection", projection);
+        bobShader.Set("model", model);
         bobShader.Set("lightPos", glm::vec3{-1, 3, 1} * 5.0f);
         bobShader.Set("lightColor", glm::vec3 { 1, 1, 1 } * 2.0f);
         bobShader.Set("viewPos", scene.GetCurrentCamera().Position());
 
-        std::vector<glm::mat4> transforms;
-        bob.BoneTransform(static_cast<float>(glfwGetTime()), transforms);
-        for (unsigned int i = 0; i < transforms.size(); i++) {
-            bobShader.Set("gBones[" + std::to_string(i) + "]", transforms[i]);
+        std::vector<glm::mat4> bone_transforms;
+        bob.BoneTransform(static_cast<float>(glfwGetTime()), bone_transforms);
+        for (unsigned int i = 0; i < bone_transforms.size(); i++) {
+            bobShader.Set("gBones[" + std::to_string(i) + "]", bone_transforms[i]);
         }
         bobShader.Set("diffuseTexture", 0);
         bob.Render();
