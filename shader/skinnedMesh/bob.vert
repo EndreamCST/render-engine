@@ -29,13 +29,12 @@ void main(){
     for (int i = 0; i < 4; i++) {
         BoneTransform += gBones[vBoneIDs[i]] * vWeights[i];
     }
-    vec4 local_position = BoneTransform * vec4(vPosition, 1);
-    vec4 local_normal = BoneTransform * vec4(vNormal, 0);
+    mat4 real_fucking_model = model * BoneTransform;
 
     frag.texCoords = vuv;
-    frag.normal = vec3(model * local_normal);
-    frag.worldPos = vec3(model * local_position);
+    frag.normal = vec3(real_fucking_model * vec4(vNormal, 0));
+    frag.worldPos = vec3(real_fucking_model * vec4(vPosition, 1));
     frag.lightSpacePos = lightSpaceTransform * vec4(frag.worldPos, 1.0);
 
-    gl_Position = projection * view * model * local_position;
+    gl_Position = projection * view * vec4(frag.worldPos, 1);
 }
