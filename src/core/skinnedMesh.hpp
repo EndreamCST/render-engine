@@ -15,7 +15,9 @@
 #include <vector>
 #include <string>
 
-class SkinnedMesh {
+#include "Component.hpp"
+
+class SkinnedMesh : public  Component{
 public:
     SkinnedMesh();
 
