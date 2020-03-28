@@ -13,6 +13,7 @@
 #include "LightInformation.hpp"
 #include "GlobalTransform.hpp"
 #include "Light.hpp"
+#include "GUI.hpp"
 
 void processInput(Camera &camera) {
     float speed = 20.0f * Engine::GetInstance().GetRenderer().GetDeltaTime();
@@ -44,15 +45,17 @@ void processInput(Camera &camera) {
 
 int main(int argc, char *argv[]) {
     static_assert(std::is_base_of_v<Component, DirectionalLight>, "fuck");
-
     Engine& engine = Engine::GetInstance();
+	Renderer& renderer = engine.GetRenderer();
 
+	GUI& ui = GUI::GUI(renderer);
+	
     engine.EnableUniformBuffer<LightInformation>();
     engine.EnableUniformBuffer<GlobalTransform>();
 
     Scene& scene = engine.CreateScene();
     engine.MakeCurrentScene(scene);
-
+	
     // --1--
     GameObject& sphere = scene.CreateGameObject(); {
         sphere.CreateComponent<Mesh>(SimpleMesh::Sphere());
@@ -101,15 +104,15 @@ int main(int argc, char *argv[]) {
     }
 
     scene.CreateSkybox();
-
     scene.Build();
-
-    Renderer& renderer = engine.GetRenderer();
     while (!renderer.ShouldEnd()) {
         renderer.UpdateBeforeRendering();
+
         processInput(scene.GetCurrentCamera());
 
-        scene.Update();
+        scene.Update(ui);
+
+		ui.DrawUI();
 
         renderer.UpdateAfterRendering();
     }

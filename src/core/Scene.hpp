@@ -11,7 +11,7 @@
 
 #include "Camera.hpp"
 #include "Skybox.hpp"
-
+#include "GUI.hpp"
 
 /*
  * Scene holds all Renderables, Lights and some other asset in the scene
@@ -59,7 +59,7 @@ public:
     /* Setting Shader component due to scene configuration */
     void Build();
 
-    void Update();
+    void Update(GUI& ui);
 
     inline Camera& GetCurrentCamera() { return camera; }
 
