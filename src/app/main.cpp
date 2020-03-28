@@ -14,6 +14,11 @@
 #include "GlobalTransform.hpp"
 #include "Light.hpp"
 
+
+//skinnedMesh----------------------------------------------------
+#include "skinnedMesh.hpp"
+
+
 void processInput(Camera &camera) {
     float speed = 20.0f * Engine::GetInstance().GetRenderer().GetDeltaTime();
     if (io::KeyPress(Key::w)) {
@@ -100,6 +105,12 @@ int main(int argc, char *argv[]) {
         light.direction = glm::vec3{0, 0, -10} - light.position;
     }
 
+    // skinnedMesh----------------------------------------------------
+    Shader bobShader("shader/skinnedMesh/bob.vert", "shader/skinnedMesh/bob.frag");
+    SkinnedMesh bob;
+    bob.LoadMesh("asset/bob/boblampclean.md5mesh");
+    // skinnedMesh end----------------------------------------------------
+
     scene.CreateSkybox();
 
     scene.Build();
@@ -110,6 +121,32 @@ int main(int argc, char *argv[]) {
         processInput(scene.GetCurrentCamera());
 
         scene.Update();
+
+        //bob render-------------------------------------------------------------
+        bobShader.UseShaderProgram();
+        glm::mat4 projection = glm::perspective(scene.GetCurrentCamera().GetFovy(), float(1280) / float(720), 0.1f, 1000.0f);
+        glm::mat4 view = scene.GetCurrentCamera().GetViewMatrix();
+        glm::mat4 model(1.0f);
+        model = translate(model, glm::vec3(5.0, -2.0, -8));
+        model = rotate(model, glm::radians(-40.0f), glm::vec3(0, 1, 0));
+        model = rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+        model = scale(model, glm::vec3(0.05f));
+        glm::mat4 MVP = projection * view * model;
+        bobShader.Set("MVP", MVP);
+        bobShader.Set("M", model);
+        bobShader.Set("lightPos", glm::vec3{-1, 3, 1} * 5.0f);
+        bobShader.Set("lightColor", glm::vec3 { 1, 1, 1 } * 2.0f);
+        bobShader.Set("viewPos", scene.GetCurrentCamera().Position());
+
+        std::vector<glm::mat4> transforms;
+        bob.BoneTransform(static_cast<float>(glfwGetTime()), transforms);
+        for (unsigned int i = 0; i < transforms.size(); i++) {
+            bobShader.Set("gBones[" + std::to_string(i) + "]", transforms[i]);
+        }
+        bobShader.Set("diffuseTexture", 0);
+        bob.Render();
+        //bob render end----------------------------------------------------
+
 
         renderer.UpdateAfterRendering();
     }
