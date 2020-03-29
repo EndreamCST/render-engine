@@ -64,6 +64,7 @@ void Scene::Update(GUI& ui) {
             auto& mesh = up_game_obj->GetComponent<Mesh>();
             auto& material = up_game_obj->GetComponent<Material>();
             auto& shader = material.GetShader();
+			
 			material.SetAlbedo(ui.ui.albedo);
 			material.SetMetallic(ui.ui.metallic);
 			material.SetRoughness(ui.ui.roughness);
