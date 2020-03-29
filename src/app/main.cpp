@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <GUI.hpp>
 
 #include "Scene.hpp"
 #include "Renderer.hpp"
@@ -14,6 +15,11 @@
 #include "GlobalTransform.hpp"
 #include "Light.hpp"
 #include "GUI.hpp"
+
+
+//skinnedMesh----------------------------------------------------
+#include "skinnedMesh.hpp"
+
 
 void processInput(Camera &camera) {
     float speed = 20.0f * Engine::GetInstance().GetRenderer().GetDeltaTime();
@@ -44,12 +50,9 @@ void processInput(Camera &camera) {
 
 
 int main(int argc, char *argv[]) {
-    static_assert(std::is_base_of_v<Component, DirectionalLight>, "fuck");
     Engine& engine = Engine::GetInstance();
 	Renderer& renderer = engine.GetRenderer();
 
-	GUI& ui = GUI::GUI(renderer);
-	
     engine.EnableUniformBuffer<LightInformation>();
     engine.EnableUniformBuffer<GlobalTransform>();
 
@@ -57,13 +60,14 @@ int main(int argc, char *argv[]) {
     engine.MakeCurrentScene(scene);
 	
     // --1--
-    GameObject& sphere = scene.CreateGameObject(); {
-        sphere.CreateComponent<Mesh>(SimpleMesh::Sphere());
-        auto& material = sphere.CreateComponent<Material>();
-        material.SetShader(engine.GetDefaultShader());
-        material.SetAlbedo(1, 1, 1);
-        material.SetMetallic(0.1);
-        material.SetRoughness(0.8);
+    GameObject& sphere = scene.CreateGameObject();
+    sphere.CreateComponent<Mesh>(SimpleMesh::Sphere());
+    auto& sphere_material = sphere.CreateComponent<Material>();
+    sphere_material.SetShader(engine.GetDefaultShader());
+    sphere_material.SetAlbedo(1, 1, 1);
+    sphere_material.SetMetallic(0.1);
+    sphere_material.SetRoughness(0.8);
+    {
         auto& transform = sphere.CreateComponent<Transform>();
         transform.SetPosition(0, 0, -10);
     }
@@ -103,16 +107,56 @@ int main(int argc, char *argv[]) {
         light.direction = glm::vec3{0, 0, -10} - light.position;
     }
 
+    // skinnedMesh----------------------------------------------------
+    Shader bobShader("shader/skinnedMesh/bob.vert", "shader/skinnedMesh/bob.frag");
+    SkinnedMesh bob;
+    bob.LoadMesh("asset/bob/boblampclean.md5mesh");
+    // skinnedMesh end----------------------------------------------------
+
     scene.CreateSkybox();
     scene.Build();
+
+    GUI ui = GUI(renderer);
+
     while (!renderer.ShouldEnd()) {
         renderer.UpdateBeforeRendering();
 
         processInput(scene.GetCurrentCamera());
 
-        scene.Update(ui);
+		sphere_material.SetAlbedo(ui.ui.albedo);
+		sphere_material.SetMetallic(ui.ui.metallic);
+		sphere_material.SetRoughness(ui.ui.roughness);
 
-		ui.DrawUI();
+        //bob render-------------------------------------------------------------
+        bobShader.UseShaderProgram();
+        glm::mat4 projection = scene.GetCurrentCamera().GetProjectionMatrix();
+        glm::mat4 view = scene.GetCurrentCamera().GetViewMatrix();
+        glm::mat4 model(1.0f);
+        model = translate(model, glm::vec3(5.0, -2.0, -8));
+        model = rotate(model, glm::radians(-40.0f), glm::vec3(0, 1, 0));
+        model = rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+        model = scale(model, glm::vec3(0.05f));
+        glm::mat4 MVP = projection * view * model;
+        bobShader.Set("view", view);
+        bobShader.Set("projection", projection);
+        bobShader.Set("model", model);
+        bobShader.Set("lightPos", glm::vec3{-1, 3, 1} * 5.0f);
+        bobShader.Set("lightColor", glm::vec3 { 1, 1, 1 } * 2.0f);
+        bobShader.Set("viewPos", scene.GetCurrentCamera().Position());
+
+        std::vector<glm::mat4> bone_transforms;
+        bob.BoneTransform(static_cast<float>(glfwGetTime()), bone_transforms);
+        for (unsigned int i = 0; i < bone_transforms.size(); i++) {
+            bobShader.Set("gBones[" + std::to_string(i) + "]", bone_transforms[i]);
+        }
+        bobShader.Set("diffuseTexture", 0);
+        bob.Render();
+        //bob render end----------------------------------------------------
+
+
+        scene.Update();
+        ui.DrawUI();
+
 
         renderer.UpdateAfterRendering();
     }

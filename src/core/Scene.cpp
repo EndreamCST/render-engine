@@ -43,7 +43,7 @@ GameObject &Scene::CreateGameObject() {
     return *up_game_objects.back();
 }
 
-void Scene::Update(GUI& ui) {
+void Scene::Update() {
     Engine& engine = Engine::GetInstance();
     auto& renderer = engine.GetRenderer();
 
@@ -64,10 +64,14 @@ void Scene::Update(GUI& ui) {
             auto& mesh = up_game_obj->GetComponent<Mesh>();
             auto& material = up_game_obj->GetComponent<Material>();
             auto& shader = material.GetShader();
+<<<<<<< HEAD
 			
 			material.SetAlbedo(ui.ui.albedo);
 			material.SetMetallic(ui.ui.metallic);
 			material.SetRoughness(ui.ui.roughness);
+=======
+
+>>>>>>> 31093108f9e8856d31a6eca1313240abb4c9a8f9
             shader.UseShaderProgram();
             mesh.DrawCall();
         } catch (NoComponent&) {
