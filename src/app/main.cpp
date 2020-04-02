@@ -16,10 +16,13 @@
 #include "Light.hpp"
 #include "GUI.hpp"
 
-
 //skinnedMesh----------------------------------------------------
 #include "skinnedMesh.hpp"
+//---------------------------------------------------------------
 
+//particleSystem-------------------------------------------------
+#include <particleSystem/ParticleSystemMaster.h>
+//---------------------------------------------------------------
 
 void processInput(Camera &camera) {
     float speed = 20.0f * Engine::GetInstance().GetRenderer().GetDeltaTime();
@@ -34,6 +37,9 @@ void processInput(Camera &camera) {
     }
     if (io::KeyPress(Key::d)) {
         camera.Translate(camera.Right() * speed);
+    }
+    if (io::KeyPress(Key::p)) {
+        ParticleSystemMaster::ChangeRenderState();
     }
     if (io::KeyPress(Key::escape)) {
         Engine::GetInstance().GetRenderer().Close();
@@ -73,7 +79,8 @@ int main(int argc, char *argv[]) {
     }
 
     // --2--
-    GameObject& ground = scene.CreateGameObject(); {
+    GameObject& ground = scene.CreateGameObject();
+    {
         ground.CreateComponent<Mesh>(SimpleMesh::Quad());
         auto& material = ground.CreateComponent<Material>();
         material.SetShader(engine.GetDefaultShader());
@@ -87,7 +94,8 @@ int main(int argc, char *argv[]) {
     }
 
     // --3--
-    GameObject& lamp = scene.CreateGameObject(); {
+    GameObject& lamp = scene.CreateGameObject();
+    {
         glm::vec3 light_color = glm::vec3 { 1, 1, 1 } * 2.0f;
         glm::vec3 light_position = glm::vec3{-1, 3, 1} * 5.0f;
 
@@ -111,7 +119,11 @@ int main(int argc, char *argv[]) {
     Shader bobShader("shader/skinnedMesh/bob.vert", "shader/skinnedMesh/bob.frag");
     SkinnedMesh bob;
     bob.LoadMesh("asset/bob/boblampclean.md5mesh");
-    // skinnedMesh end----------------------------------------------------
+    // skinnedMesh end------------------------------------------------
+
+    // particleSystem ------------------------------------------------
+    ParticleSystemMaster::LoadParticlesInfo();
+    // particleSystem end---------------------------------------------
 
     scene.CreateSkybox();
     scene.Build();
@@ -153,10 +165,14 @@ int main(int argc, char *argv[]) {
         bob.Render();
         //bob render end----------------------------------------------------
 
-
         scene.Update();
         ui.DrawUI();
 
+        //particleSystem start----------------------------------------------
+            glViewport(0, 0, 1280, 720);
+            ParticleSystemMaster::GenerateParticles();
+            ParticleSystemMaster::Render(scene.GetCurrentCamera());
+        //particleSystem render end-----------------------------------------
 
         renderer.UpdateAfterRendering();
     }

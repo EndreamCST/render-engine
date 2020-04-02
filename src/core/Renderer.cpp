@@ -81,6 +81,7 @@ void Renderer::UpdateBeforeRendering() {
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.1, 0.1, 0.1, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    UpdateDeltaTime();
 }
 
 void Renderer::UpdateAfterRendering() {
@@ -93,12 +94,16 @@ std::pair<int, int> Renderer::GetWindowSize() const {
     return size;
 }
 
-double Renderer::GetDeltaTime() const {
+void Renderer::UpdateDeltaTime() {
     static double last_frame;
     auto this_frame = glfwGetTime();
     auto offset = this_frame - last_frame;
     last_frame = this_frame;
-    return offset;
+    deltaTime = offset;
+}
+
+double Renderer::GetDeltaTime() const {
+    return deltaTime;
 }
 
 void Renderer::Close() {
