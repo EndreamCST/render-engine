@@ -1,6 +1,7 @@
 cmake-Build-debug/
 cmake-Build/
 cmake-Build-ms/
+cmake_build_ms/
 .DS_Store
 .idea
 .sln
