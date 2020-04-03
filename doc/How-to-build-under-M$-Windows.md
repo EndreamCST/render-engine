@@ -13,34 +13,24 @@
 
 ![cmake-gui-path](cmake-gui-path.png)
 
-2. 点一下Configure，选你的VS版本，点Finish，再点一下Configure，再点Generate
+2. 点一下Configure，选你的VS版本，点Finish，再点Generate
 3. 如果没有问题，点Open Project，应该就可以看到你们最喜欢的VS了
-4. 在左边“解决方案管理器”，选择`engine`作为启动项
-5. build一遍，如果没有出现意外，你会看到
+4. 在左边“解决方案管理器”，选择`engine`作为启动项，并生成。
+5. 运行 `engine`，如果没有出现意外，你会看到
 
 ![dll-error](dll-error.png)
 
-6. 不要惊慌，这只是因为VS build的runtime并不会自动在目录下寻找dll文件（也是因为我cmakelists写的太垃圾了）。详见：https://cmake.org/pipermail/cmake/2012-June/050960.html
+6. 不要惊慌，这只是因为 VS build 的 runtime 并不会自动在目录下寻找 dll 文件（也是因为我cmakelists写的太垃圾了）。详见：https://cmake.org/pipermail/cmake/2012-June/050960.html
 
-7. 为了解决这个问题，重新打开我们可爱的Cmake-gui，找到`LIBRARY_OUTPUT_PATH`这一项
+7. 为了解决这个问题，把 lib\Debug里的所以文件拷贝到Debug里。
 
-    ![cmake-tweak-dll](cmake-tweak-dll.png)
+    ![1](1.png)
 
-8. 把它设成VS所生成的包含exe目录，比如在我的虚拟机里，是：
+![2](2.png)
 
-![cmake-change-lib-output-path](cmake-change-lib-output-path.png)
+8. 不出意外，再点一下运行你就可以跑了
 
-![cmake-Build-ms-debug-dir](cmake-build-ms-debug-dir.png)
-
-9. 再点一下 Configure，再点一下 Generate，然后 OpenProject，再build一遍
-
-10. 虽然这次你依然会看到和第5步一样的错误，但是打开你之前设为`LIBRARY_OUTPUT_PATH`那个目录，你会看到多了一个Debug文件，这个文件里包含了我们需要的所有编译好的依赖库。把它们拖出来放到和.exe相同的目录下；或者在vs里设置相关的library path（这里图省事选了前者）：
-
-    ![a-dirty-hack](a-dirty-hack.png)
-
-11. 不出意外，再点一下运行你就可以跑了
-
-    ![result-vm](result-vm.png)
+![result-vm](result-vm.png)
 
 
 

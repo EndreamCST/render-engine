@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     scene.CreateSkybox();
     scene.Build();
 
-    //GUI ui = GUI(renderer);
+    GUI ui = GUI(renderer);
 
     while (!renderer.ShouldEnd()) {
         renderer.UpdateBeforeRendering();
@@ -136,19 +136,19 @@ int main(int argc, char *argv[]) {
 
         scene.Update();
 
-//		sphere_material.SetAlbedo(ui.ui.albedo);
-//		sphere_material.SetMetallic(ui.ui.metallic);
-//		sphere_material.SetRoughness(ui.ui.roughness);
+		sphere_material.SetAlbedo(ui.ui.albedo);
+		sphere_material.SetMetallic(ui.ui.metallic);
+		sphere_material.SetRoughness(ui.ui.roughness);
 
         //Bob Render Begin-------------------------------------------------------------
         bob.Render(scene.GetCurrentCamera(), static_cast<float>(glfwGetTime()));
         //Bob Render End----------------------------------------------------
 
 
-//        ui.DrawUI();
+        ui.DrawUI();
 
         //particleSystem start----------------------------------------------
-            glViewport(0, 0, 1280*2, 720*2);
+            glViewport(0, 0, 1280, 720);
             ParticleSystemMaster::GenerateParticles();
             ParticleSystemMaster::Render(scene.GetCurrentCamera());
         //particleSystem render end-----------------------------------------

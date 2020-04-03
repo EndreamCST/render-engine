@@ -241,8 +241,8 @@ void SkinnedMesh::Render(Camera &camera, float time) {
     glm::mat4 projection = glm::perspective(camera.GetFovy(), float(1280) / float(720), 0.1f, 1000.0f);
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 model(1.0f);
-    model = translate(model, glm::vec3(5.0, -2.0, -8));
-    model = rotate(model, glm::radians(-40.0f), glm::vec3(0, 1, 0));
+    model = translate(model, glm::vec3(-5.0, -2.0, -8));
+    model = rotate(model, glm::radians(40.0f), glm::vec3(0, 1, 0));
     model = rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
     model = scale(model, glm::vec3(0.05f));
     glm::mat4 MVP = projection * view * model;
