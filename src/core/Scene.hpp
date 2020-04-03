@@ -11,7 +11,7 @@
 
 #include "Camera.hpp"
 #include "Skybox.hpp"
-
+#include "GUI.hpp"
 
 /*
  * Scene holds all Renderables, Lights and some other asset in the scene

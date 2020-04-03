@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <GUI.hpp>
 
 #include "Scene.hpp"
 #include "Renderer.hpp"
@@ -13,11 +14,15 @@
 #include "LightInformation.hpp"
 #include "GlobalTransform.hpp"
 #include "Light.hpp"
-
+#include "GUI.hpp"
 
 //skinnedMesh----------------------------------------------------
 #include "skinnedMesh.hpp"
+//---------------------------------------------------------------
 
+//particleSystem-------------------------------------------------
+#include <particleSystem/ParticleSystemMaster.h>
+//---------------------------------------------------------------
 
 void processInput(Camera &camera) {
     float speed = 20.0f * Engine::GetInstance().GetRenderer().GetDeltaTime();
@@ -32,6 +37,9 @@ void processInput(Camera &camera) {
     }
     if (io::KeyPress(Key::d)) {
         camera.Translate(camera.Right() * speed);
+    }
+    if (io::KeyPress(Key::p)) {
+        ParticleSystemMaster::ChangeRenderState();
     }
     if (io::KeyPress(Key::escape)) {
         Engine::GetInstance().GetRenderer().Close();
@@ -48,30 +56,31 @@ void processInput(Camera &camera) {
 
 
 int main(int argc, char *argv[]) {
-    static_assert(std::is_base_of_v<Component, DirectionalLight>, "fuck");
-
     Engine& engine = Engine::GetInstance();
+	Renderer& renderer = engine.GetRenderer();
 
     engine.EnableUniformBuffer<LightInformation>();
     engine.EnableUniformBuffer<GlobalTransform>();
 
     Scene& scene = engine.CreateScene();
     engine.MakeCurrentScene(scene);
-
+	
     // --1--
-    GameObject& sphere = scene.CreateGameObject(); {
-        sphere.CreateComponent<Mesh>(SimpleMesh::Sphere());
-        auto& material = sphere.CreateComponent<Material>();
-        material.SetShader(engine.GetDefaultShader());
-        material.SetAlbedo(1, 1, 1);
-        material.SetMetallic(0.1);
-        material.SetRoughness(0.8);
+    GameObject& sphere = scene.CreateGameObject();
+    sphere.CreateComponent<Mesh>(SimpleMesh::Sphere());
+    auto& sphere_material = sphere.CreateComponent<Material>();
+    sphere_material.SetShader(engine.GetDefaultShader());
+    sphere_material.SetAlbedo(1, 1, 1);
+    sphere_material.SetMetallic(0.1);
+    sphere_material.SetRoughness(0.8);
+    {
         auto& transform = sphere.CreateComponent<Transform>();
         transform.SetPosition(0, 0, -10);
     }
 
     // --2--
-    GameObject& ground = scene.CreateGameObject(); {
+    GameObject& ground = scene.CreateGameObject();
+    {
         ground.CreateComponent<Mesh>(SimpleMesh::Quad());
         auto& material = ground.CreateComponent<Material>();
         material.SetShader(engine.GetDefaultShader());
@@ -85,7 +94,8 @@ int main(int argc, char *argv[]) {
     }
 
     // --3--
-    GameObject& lamp = scene.CreateGameObject(); {
+    GameObject& lamp = scene.CreateGameObject();
+    {
         glm::vec3 light_color = glm::vec3 { 1, 1, 1 } * 2.0f;
         glm::vec3 light_position = glm::vec3{-1, 3, 1} * 5.0f;
 
@@ -105,25 +115,43 @@ int main(int argc, char *argv[]) {
         light.direction = glm::vec3{0, 0, -10} - light.position;
     }
 
-    // skinnedMesh Bob
+    // skinnedMesh Bob Begin--------------------------
     SkinnedMesh bob;
     bob.LoadMesh("asset/bob/boblampclean.md5mesh");
+    // skinnedMesh Bob End----------------------------
+
+    // particleSystem ------------------------------------------------
+    ParticleSystemMaster::LoadParticlesInfo();
+    // particleSystem end---------------------------------------------
 
     scene.CreateSkybox();
-
     scene.Build();
 
-    Renderer& renderer = engine.GetRenderer();
+    //GUI ui = GUI(renderer);
+
     while (!renderer.ShouldEnd()) {
         renderer.UpdateBeforeRendering();
+
         processInput(scene.GetCurrentCamera());
 
         scene.Update();
+
+//		sphere_material.SetAlbedo(ui.ui.albedo);
+//		sphere_material.SetMetallic(ui.ui.metallic);
+//		sphere_material.SetRoughness(ui.ui.roughness);
 
         //Bob Render Begin-------------------------------------------------------------
         bob.Render(scene.GetCurrentCamera(), static_cast<float>(glfwGetTime()));
         //Bob Render End----------------------------------------------------
 
+
+//        ui.DrawUI();
+
+        //particleSystem start----------------------------------------------
+            glViewport(0, 0, 1280*2, 720*2);
+            ParticleSystemMaster::GenerateParticles();
+            ParticleSystemMaster::Render(scene.GetCurrentCamera());
+        //particleSystem render end-----------------------------------------
 
         renderer.UpdateAfterRendering();
     }

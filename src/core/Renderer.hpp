@@ -34,6 +34,8 @@ public:
 
     bool ShouldEnd();
 
+    void UpdateDeltaTime();
+
     double GetDeltaTime() const;
 
     void InitializeOpenGL();
@@ -50,8 +52,8 @@ public:
 
 private:
     GLFWwindow *window = nullptr;
-
     friend class GUI;
+    double deltaTime;
 };
 
 

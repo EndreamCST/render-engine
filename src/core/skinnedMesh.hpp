@@ -82,13 +82,11 @@ private:
             NumIndices = 0;
             BaseVertex = 0;
             BaseIndex = 0;
-            MaterialIndex = INVALID_MATERIAL;
         }
 
         unsigned int NumIndices;
         unsigned int BaseVertex;
         unsigned int BaseIndex;
-        unsigned int MaterialIndex;
         std::vector<SkinnedTexture> m_Textures;
     };
 
