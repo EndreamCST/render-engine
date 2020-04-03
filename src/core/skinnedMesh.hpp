@@ -16,7 +16,8 @@
 #include <string>
 
 #include "Component.hpp"
-
+#include "Camera.hpp"
+#include "Shader.hpp"
 class SkinnedMesh : public  Component{
 public:
     SkinnedMesh();
@@ -25,7 +26,7 @@ public:
 
     bool LoadMesh(const std::string &Filename);
 
-    void Render();
+    void Render(Camera &camera, float time);
 
     unsigned int NumBones() const {
         return m_NumBones;
@@ -104,7 +105,7 @@ private:
 
     void ReadNodeHierarchy(float AnimationTime, const aiNode *pNode, const glm::mat4 &ParentTransform);
 
-    const aiNodeAnim *FindNodeAnim(const aiAnimation *pAnimation, const std::string NodeName);
+    const aiNodeAnim *FindNodeAnim(const aiAnimation *pAnimation, const std::string &NodeName);
 
     void CalcInterpolatedScaling(aiVector3D &Out, float AnimationTime, const aiNodeAnim *pNodeAnim);
 
@@ -136,6 +137,7 @@ private:
     const aiScene *m_pScene;
     Assimp::Importer m_Importer;
 
+    Shader shader;
 };
 
 
