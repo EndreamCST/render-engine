@@ -1,12 +1,8 @@
 #version 330 core
 out vec4 fragColor;
-
-in FROM_VS_TO_FS {
-    vec2 texCoords;
-    vec3 worldPos;
-    vec3 normal;
-    vec4 lightSpacePos;
-} frag;
+in vec2 uv;
+in vec3 normal;
+in vec3 fragPos;
 
 uniform sampler2D diffuseTexture;
 //uniform sampler2D specularTexture;
@@ -23,16 +19,16 @@ void main(){
     float lightPower = 10.0f;
 
     //material
-    vec3 diffuseMaterial = texture(diffuseTexture, frag.texCoords).rgb;
+    vec3 diffuseMaterial = texture(diffuseTexture, uv).rgb;
     //vec3 specularMaterial = texture(specularTexture, uv).rgb;
     //compute
-    vec3 n = normalize(frag.normal);
-    vec3 l = normalize(lightPos-frag.worldPos);
-    vec3 v = normalize(viewPos-frag.worldPos);
+    vec3 n = normalize(normal);
+    vec3 l = normalize(lightPos-fragPos);
+    vec3 v = normalize(viewPos-fragPos);
     vec3 h = normalize(l+v);
     float cosTheta = clamp(dot(n,l),0,1);
     float cosAlpha = clamp(dot(n,h),0,1);
-    float d = length(lightPos-frag.worldPos);
+    float d = length(lightPos-fragPos);
     float attenuation = 1.0/(d);
     //color
     vec3 ambientColor = diffuseMaterial*vec3(0.1)*lightColor;

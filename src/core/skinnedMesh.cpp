@@ -20,7 +20,7 @@ void SkinnedMesh::VertexBoneData::AddBoneData(unsigned int BoneID, float Weight)
     assert(0);
 }
 
-SkinnedMesh::SkinnedMesh() {
+SkinnedMesh::SkinnedMesh():shader("shader/skinnedMesh/bob.vert", "shader/skinnedMesh/bob.frag") {
     m_VAO = 0;
     for (auto &i:m_Buffers)
         i = 0;
@@ -49,7 +49,7 @@ bool SkinnedMesh::LoadMesh(const std::string &Filename) {
     // Release the previously loaded mesh (if it exists)
     Clear();
 
-    std::string::size_type SlashIndex = Filename.find_last_of("/");
+    std::string::size_type SlashIndex = Filename.find_last_of('/');
 
     if (SlashIndex == std::string::npos) {
         Dir = ".";
@@ -157,9 +157,9 @@ void SkinnedMesh::InitMesh(unsigned int Index, const aiMesh *paiMesh, std::vecto
         const aiVector3D *pNormal = paiMesh->HasNormals() ? &(paiMesh->mNormals[i]) : &Zero3D;
         const aiVector3D *pTexCoord = paiMesh->HasTextureCoords(0) ? &(paiMesh->mTextureCoords[0][i]) : &Zero3D;
 
-        Positions.push_back(glm::vec3(pPos->x, pPos->y, pPos->z));
-        Normals.push_back(glm::vec3(pNormal->x, pNormal->y, pNormal->z));
-        TexCoords.push_back(glm::vec2(pTexCoord->x, pTexCoord->y));
+        Positions.emplace_back(pPos->x, pPos->y, pPos->z);
+        Normals.emplace_back(pNormal->x, pNormal->y, pNormal->z);
+        TexCoords.emplace_back(pTexCoord->x, pTexCoord->y);
 
     }
 
@@ -236,7 +236,30 @@ void SkinnedMesh::LoadBones(unsigned int MeshIndex, const aiMesh *pMesh, std::ve
 }
 
 
-void SkinnedMesh::Render() {
+void SkinnedMesh::Render(Camera &camera, float time) {
+    shader.UseShaderProgram();
+    glm::mat4 projection = glm::perspective(camera.GetFovy(), float(1280) / float(720), 0.1f, 1000.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 model(1.0f);
+    model = translate(model, glm::vec3(-5.0, -2.0, -8));
+    model = rotate(model, glm::radians(40.0f), glm::vec3(0, 1, 0));
+    model = rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    model = scale(model, glm::vec3(0.05f));
+    glm::mat4 MVP = projection * view * model;
+    shader.Set("MVP", MVP);
+    shader.Set("M", model);
+    shader.Set("lightPos", glm::vec3{-1, 3, 1} * 5.0f);
+    shader.Set("lightColor", glm::vec3 { 1, 1, 1 } * 2.0f);
+    shader.Set("viewPos", camera.Position());
+
+    shader.Set("diffuseTexture", 0);
+
+    std::vector<glm::mat4> transforms;
+    BoneTransform(time, transforms);
+    for (unsigned int i = 0; i < transforms.size(); i++) {
+        shader.Set("gBones[" + std::to_string(i) + "]", transforms[i]);
+    }
+
     glBindVertexArray(m_VAO);
 
     for (unsigned int i = 0; i < m_Entries.size(); i++) {
@@ -329,7 +352,7 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTime, const aiNode *pNode, co
     }
 }
 
-const aiNodeAnim *SkinnedMesh::FindNodeAnim(const aiAnimation *pAnimation, const std::string NodeName) {
+const aiNodeAnim *SkinnedMesh::FindNodeAnim(const aiAnimation *pAnimation, const std::string &NodeName) {
     for (unsigned int i = 0; i < pAnimation->mNumChannels; i++) {
         const aiNodeAnim *pNodeAnim = pAnimation->mChannels[i];
 

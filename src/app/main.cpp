@@ -16,10 +16,13 @@
 #include "Light.hpp"
 #include "GUI.hpp"
 
-
 //skinnedMesh----------------------------------------------------
 #include "skinnedMesh.hpp"
+//---------------------------------------------------------------
 
+//particleSystem-------------------------------------------------
+#include <particleSystem/ParticleSystemMaster.h>
+//---------------------------------------------------------------
 
 void processInput(Camera &camera) {
     float speed = 20.0f * Engine::GetInstance().GetRenderer().GetDeltaTime();
@@ -34,6 +37,9 @@ void processInput(Camera &camera) {
     }
     if (io::KeyPress(Key::d)) {
         camera.Translate(camera.Right() * speed);
+    }
+    if (io::KeyPress(Key::p)) {
+        ParticleSystemMaster::ChangeRenderState();
     }
     if (io::KeyPress(Key::escape)) {
         Engine::GetInstance().GetRenderer().Close();
@@ -73,7 +79,8 @@ int main(int argc, char *argv[]) {
     }
 
     // --2--
-    GameObject& ground = scene.CreateGameObject(); {
+    GameObject& ground = scene.CreateGameObject();
+    {
         ground.CreateComponent<Mesh>(SimpleMesh::Quad());
         auto& material = ground.CreateComponent<Material>();
         material.SetShader(engine.GetDefaultShader());
@@ -87,7 +94,8 @@ int main(int argc, char *argv[]) {
     }
 
     // --3--
-    GameObject& lamp = scene.CreateGameObject(); {
+    GameObject& lamp = scene.CreateGameObject();
+    {
         glm::vec3 light_color = glm::vec3 { 1, 1, 1 } * 2.0f;
         glm::vec3 light_position = glm::vec3{-1, 3, 1} * 5.0f;
 
@@ -107,11 +115,14 @@ int main(int argc, char *argv[]) {
         light.direction = glm::vec3{0, 0, -10} - light.position;
     }
 
-    // skinnedMesh----------------------------------------------------
-    Shader bobShader("shader/skinnedMesh/bob.vert", "shader/skinnedMesh/bob.frag");
+    // skinnedMesh Bob Begin--------------------------
     SkinnedMesh bob;
     bob.LoadMesh("asset/bob/boblampclean.md5mesh");
-    // skinnedMesh end----------------------------------------------------
+    // skinnedMesh Bob End----------------------------
+
+    // particleSystem ------------------------------------------------
+    ParticleSystemMaster::LoadParticlesInfo();
+    // particleSystem end---------------------------------------------
 
     scene.CreateSkybox();
     scene.Build();
@@ -123,40 +134,24 @@ int main(int argc, char *argv[]) {
 
         processInput(scene.GetCurrentCamera());
 
+        scene.Update();
+
 		sphere_material.SetAlbedo(ui.ui.albedo);
 		sphere_material.SetMetallic(ui.ui.metallic);
 		sphere_material.SetRoughness(ui.ui.roughness);
 
-        //bob render-------------------------------------------------------------
-        bobShader.UseShaderProgram();
-        glm::mat4 projection = scene.GetCurrentCamera().GetProjectionMatrix();
-        glm::mat4 view = scene.GetCurrentCamera().GetViewMatrix();
-        glm::mat4 model(1.0f);
-        model = translate(model, glm::vec3(5.0, -2.0, -8));
-        model = rotate(model, glm::radians(-40.0f), glm::vec3(0, 1, 0));
-        model = rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-        model = scale(model, glm::vec3(0.05f));
-        glm::mat4 MVP = projection * view * model;
-        bobShader.Set("view", view);
-        bobShader.Set("projection", projection);
-        bobShader.Set("model", model);
-        bobShader.Set("lightPos", glm::vec3{-1, 3, 1} * 5.0f);
-        bobShader.Set("lightColor", glm::vec3 { 1, 1, 1 } * 2.0f);
-        bobShader.Set("viewPos", scene.GetCurrentCamera().Position());
-
-        std::vector<glm::mat4> bone_transforms;
-        bob.BoneTransform(static_cast<float>(glfwGetTime()), bone_transforms);
-        for (unsigned int i = 0; i < bone_transforms.size(); i++) {
-            bobShader.Set("gBones[" + std::to_string(i) + "]", bone_transforms[i]);
-        }
-        bobShader.Set("diffuseTexture", 0);
-        bob.Render();
-        //bob render end----------------------------------------------------
+        //Bob Render Begin-------------------------------------------------------------
+        bob.Render(scene.GetCurrentCamera(), static_cast<float>(glfwGetTime()));
+        //Bob Render End----------------------------------------------------
 
 
-        scene.Update();
         ui.DrawUI();
 
+        //particleSystem start----------------------------------------------
+            glViewport(0, 0, 1280, 720);
+            ParticleSystemMaster::GenerateParticles();
+            ParticleSystemMaster::Render(scene.GetCurrentCamera());
+        //particleSystem render end-----------------------------------------
 
         renderer.UpdateAfterRendering();
     }

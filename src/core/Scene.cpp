@@ -65,6 +65,10 @@ void Scene::Update() {
             auto& material = up_game_obj->GetComponent<Material>();
             auto& shader = material.GetShader();
 
+	//		material.SetAlbedo(ui.ui.albedo);
+	//		material.SetMetallic(ui.ui.metallic);
+	//		material.SetRoughness(ui.ui.roughness);
+
             shader.UseShaderProgram();
             mesh.DrawCall();
         } catch (NoComponent&) {

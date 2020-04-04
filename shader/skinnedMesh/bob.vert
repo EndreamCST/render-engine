@@ -2,39 +2,26 @@
 layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec2 vuv;
 layout (location = 2) in vec3 vNormal;
-
 layout (location = 3) in ivec4 vBoneIDs;
 layout (location = 4) in vec4 vWeights;
 
-out FROM_VS_TO_FS {
-    vec2 texCoords;
-    vec3 worldPos;
-    vec3 normal;
-    vec4 lightSpacePos;
-} frag;
+out vec2 uv;
+out vec3 normal;
+out vec3 fragPos;
 
-//layout (std140) uniform GlobalTransform {
-uniform mat4 projection;
-uniform mat4 view;
-//};
-uniform mat4 model;
-
+uniform mat4 MVP;
+uniform mat4 M;
 const int MAX_BONES = 100;
 uniform mat4 gBones[MAX_BONES];
 
-uniform mat4 lightSpaceTransform;
-
 void main(){
-    mat4 BoneTransform = mat4(0.0);
-    for (int i = 0; i < 4; i++) {
-        BoneTransform += gBones[vBoneIDs[i]] * vWeights[i];
-    }
-    mat4 real_fucking_model = model * BoneTransform;
-
-    frag.texCoords = vuv;
-    frag.normal = vec3(real_fucking_model * vec4(vNormal, 0));
-    frag.worldPos = vec3(real_fucking_model * vec4(vPosition, 1));
-    frag.lightSpacePos = lightSpaceTransform * vec4(frag.worldPos, 1.0);
-
-    gl_Position = projection * view * vec4(frag.worldPos, 1);
+    mat4 BoneTransform = gBones[vBoneIDs[0]] * vWeights[0];
+    BoneTransform += gBones[vBoneIDs[1]] * vWeights[1];
+    BoneTransform += gBones[vBoneIDs[2]] * vWeights[2];
+    BoneTransform += gBones[vBoneIDs[3]] * vWeights[3];
+    vec4 position = BoneTransform * vec4(vPosition, 1);
+    gl_Position = MVP * position;
+    uv = vuv;
+    normal = vec3(M*BoneTransform*vec4(vNormal, 0));
+    fragPos = vec3(M*position);
 }
